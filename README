@@ -1,0 +1,17 @@
+The DDRaceSettingParser is a small python script which will parse a DDRace repo at github.
+For more info see below.
+-->Made by XXLTomate<--
+
+$ DDRaceSettingParser.py --help
+
+Usage: DDRaceSettingParser.py [options]
+
+Options:
+  -h, --help            show this help message and exit
+  -b, --html            Html output (table)
+  -s, --cfg             Generate config file with default values (default)
+  -c, --commands        Parse commands, not settings
+  -n, --noformat        Does not format HTML output
+  -v, --verbose         Shows much output
+  -m MAXCLIENTS, --maxclients=MAXCLIENTS
+                        maximal clients in your DDRace mod (default: 16)
