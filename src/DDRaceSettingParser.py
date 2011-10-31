@@ -26,6 +26,7 @@ class GetSettings():
         self.variables_h = githubPrefix + "/src/game/variables.h" 
         self.config_variables_h = githubPrefix + "/src/engine/shared/config_variables.h"
         self.ddracecommands_h = githubPrefix + "/src/game/ddracecommands.h"
+        self.chatcommands_h = githubPrefix + "/src/game/server/ddracechat.h"
         self.gamecontext_cpp = githubPrefix + "/src/game/server/gamecontext.cpp"
         self.server_cpp = githubPrefix + "/src/engine/server/server.cpp"
         
@@ -58,7 +59,9 @@ class GetSettings():
             print "Parsing gamecontext.cpp"
             self.getConsoleCommands(self.gamecontext_cpp)
             print "Parsing ddracecommands.h"
-            self.getMacoCommands()
+            self.getMacoCommands(self.ddracecommands_h)
+            print "Parsing ddracechat.h"
+            self.getMacoCommands(self.chatcommands_h)
         else:
             print "Parsing variables.h"
             self.getMacroSettings(self.variables_h)
@@ -74,13 +77,16 @@ class GetSettings():
         for line in tmp.readlines():
             self.parseLine(line);
             
-    def getMacoCommands(self):
-        tmp = urllib.urlopen(self.ddracecommands_h)
+    def getMacoCommands(self, url):
+        tmp = urllib.urlopen(url)
         for line in tmp.readlines():
             if line[0] == "/" or line[0] == "#" or line == "\n" or line == "":
                 continue
-
-            settingLine = line[16:-2].replace(", ",",").replace("\"","").replace(";","")
+            
+            #macro lenght
+            offset = len(line.split("(")[0]) + 1
+            
+            settingLine = line[offset:-2].replace(", ",",").replace("\"","").replace(";","")
             commandSplit = settingLine.split(",")
                    
             if self.useHtml:
@@ -118,6 +124,9 @@ class GetSettings():
     def printDefault(self,setting):
         if self.useCommands:
             
+            if setting[-1] == ")": #empty description
+                setting[-1] = ""
+            
             out = setting[0] + " " + setting[1] + " [" + setting[-1].split("_")[-1] +"]"
             
             if self.useVerbose:
@@ -148,16 +157,15 @@ class GetSettings():
 <html>
 <h1>DDRaceCommands</h1>
 <table border="2">
-<tr><th align="center">Command</th><th align="center">Description</th><th align="center">Level</th></tr>"""
+<tr><th align="center">Command</th><th align="center">Description</th></tr>"""
             else:
                 out = """
 <html>
-    <h1>DDRaceSettings</h1>
+    <h1>DDRaceCommands</h1>
     <table border="2">
         <tr>
             <th align="center">Command</th>
             <th align="center">Description</th>
-            <th align="center">Level</th>
         </tr>"""
         else:
             if self.noFormat:
@@ -165,7 +173,7 @@ class GetSettings():
 <html>
 <h1>DDRaceSettings</h1>
 <table border="2">
-<tr><th align="center">Setting</th><th align="center">Description</th><th align="center">Type</th><th align="center">Default</th><th align="center">Min - Max / Max. Length</th><th align="center">Level</th></tr>"""
+<tr><th align="center">Setting</th><th align="center">Description</th><th align="center">Type</th><th align="center">Default</th><th align="center">Min - Max / Max. Length</th></tr>"""
             else:
                 out = """
 <html>
@@ -177,7 +185,6 @@ class GetSettings():
             <th align="center">Type</th>
             <th align="center">Default</th>
             <th align="center">Min - Max / Max. Length</th>
-            <th align="center">Level</th>
         </tr>"""
         
         file = open(self.storeFile, "a")    
@@ -208,9 +215,10 @@ Generated: """ + self.dateTime + """ with DDRaceSettingParser by XXLTomate
             #0:Command
             outCommand.append(command[0] + " " + command[1])
             #1:Description
-            outCommand.append(command[5])
-            #2:Level
-            outCommand.append(command[-1].replace(")", "").split("_")[-1])
+            if command[5] == ")": #empty description
+                outCommand.append("")
+            else:
+                outCommand.append(command[5])
         
             if self.noFormat:
                 out = """<tr>"""
@@ -249,8 +257,6 @@ Generated: """ + self.dateTime + """ with DDRaceSettingParser by XXLTomate
                     outSetting.append(setting[3])
                     #4:MinMay
                     outSetting.append(setting[2])
-                    #5:Level 
-                    outSetting.append(setting[-2].split("_")[-1])
                 else:
                     #0:Setting
                     outSetting.append(setting[1])
@@ -262,8 +268,6 @@ Generated: """ + self.dateTime + """ with DDRaceSettingParser by XXLTomate
                     outSetting.append(setting[2])
                     #4:MinMay
                     outSetting.append(setting[3] + " - " + setting[4].replace("MAX_CLIENTS", str(self.maxClients)))
-                    #5:Level 
-                    outSetting.append(setting[-2].split("_")[-1])
                     
                 if self.noFormat: 
                     out = """<tr>"""
